@@ -1,0 +1,91 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+bin/
+lib/
+lib64/
+share/
+pyvenv.cfg
+pip-selfcheck.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+test_results.json
+*_test.json
+*_profile.json
+
+# Output files
+output/
+temp/
+*.json
+!package.json
+!package-lock.json
+
+# Sensitive Data
+config.ini
+secrets.py
+*.key
+*.pem
+*.cert
+
+# Proxy lists
+proxies.txt
+proxy_list.txt
+
+# Cache
+.cache/
+*.cache
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Claude
+.claude/

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  revampsite:
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_DEBUG=True
+      - LOVABLE_EMAIL=${LOVABLE_EMAIL}
+      - LOVABLE_PASSWORD=${LOVABLE_PASSWORD}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - HEADLESS_BROWSER=True
+    volumes:
+      - ./data:/app/data
+      - ./screenshots:/app/screenshots
+    restart: unless-stopped

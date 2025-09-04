@@ -14,6 +14,8 @@ from instagram_scraper import InstagramScraper
 from requirements_collector import ConversationManager, RequirementsCollector
 from database import Database
 from config import Config
+import asyncio
+from lovable_automation import LovableService
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 CORS(app)
@@ -209,6 +211,85 @@ def generate_prompt(project_id):
     
     except Exception as e:
         print(f"Error generating prompt: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/generate/<project_id>', methods=['POST'])
+def generate_website(project_id):
+    """Generate website using Lovable automation"""
+    try:
+        # Get project data
+        project = db.get_project(project_id)
+        if not project:
+            return jsonify({'error': 'Project not found'}), 404
+        
+        # Get the Lovable prompt
+        instagram_data = db.get_instagram_data(project_id)
+        requirements = db.get_requirements(project_id)
+        
+        if not requirements:
+            return jsonify({'error': 'Requirements not collected yet'}), 400
+        
+        # Create collector and generate prompt
+        collector = RequirementsCollector()
+        collector.set_instagram_data(instagram_data['profile_data'])
+        collector.collected_data = {
+            k: v for k, v in requirements.items() 
+            if k in ['brand_name', 'tone_keywords', 'target_audience', 'primary_color', 'main_goal']
+        }
+        
+        lovable_prompt = collector.generate_lovable_prompt()
+        
+        # Check for Lovable credentials
+        email = os.getenv('LOVABLE_EMAIL')
+        password = os.getenv('LOVABLE_PASSWORD')
+        
+        if not email or not password:
+            return jsonify({
+                'error': 'Lovable credentials not configured',
+                'message': 'Please set LOVABLE_EMAIL and LOVABLE_PASSWORD environment variables'
+            }), 500
+        
+        # Run Lovable automation
+        service = LovableService(email, password)
+        
+        # Run async function in sync context
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(
+            service.generate_from_requirements(
+                project_id=project_id,
+                prompt=lovable_prompt,
+                headless=True  # Run headless in production
+            )
+        )
+        
+        # Update database with results
+        if result['success']:
+            db.update_project_status(
+                project_id, 
+                'website_generated',
+                preview_url=result['preview_url']
+            )
+            db.save_generated_content(
+                project_id,
+                lovable_prompt,
+                result['preview_url'],
+                'completed'
+            )
+        else:
+            db.save_generated_content(
+                project_id,
+                lovable_prompt,
+                None,
+                'failed',
+                result.get('error')
+            )
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"Error generating website: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
